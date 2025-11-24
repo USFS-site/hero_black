@@ -167,4 +167,294 @@
   <div id="app">
     <div class="hero" role="region" aria-label="Hero">
       <div id="bg" class="hero__bg" aria-hidden="true"></div>
-      <div class="hero__overlay" a
+      <div class="hero__overlay" aria-hidden="true"></div>
+
+      <div class="hero__content" id="content-area">
+        <div class="hero__inner" id="content">
+          <div class="hero__eyebrow" id="eyebrow" style="display:none">Eyebrow</div>
+          <h1 class="hero__title" id="title">Loading…</h1>
+          <div class="hero__blurb" id="blurb"></div>
+          <div class="hero__buttons" id="buttons"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="fallback" class="hero__fallback" style="display:none;">
+      Content not available.
+    </div>
+  </div>
+
+<script>
+/*
+  Usage:
+    - Put this file on your site (GitHub Pages).
+    - In Sidearm iframe field add only the URL, for example:
+        https://yourdomain.com/hero.html?csvUrl=https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv&id=3
+    - Or embed with only ?id=3 if you want to hardcode the csvUrl into the file below.
+
+  This script:
+    - Loads CSV from ?csvUrl=... (or uses defaultCsvUrl embedded below)
+    - Parses CSV, looks for header row matching:
+        id, title, blurb, bg_image, button1_text, button1_url, button2_text, button2_url
+    - Finds row with ?id=### and renders it.
+    - Fallback to first row if id not provided/found.
+*/
+
+// === Default CSV — replace with your CSV publish URL or pass ?csvUrl=... ===
+const DEFAULT_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo6JAV5prsmpxnt6fl9BHXvaL25XD-hzRAyUe50rx4_ImrfjUjhjqKW72XW1QX2gRJwH6A3YXtTgmg/pub?output=csv";
+
+// === Default background image (uploaded screenshot path) ===
+const DEFAULT_BG = "/mnt/data/Screenshot 2025-11-24 at 1.55.36 PM.png";
+
+// Parse querystring
+function qsParse() {
+  const q = {};
+  const raw = location.search.replace(/^\?/, '');
+  if(!raw) return q;
+  raw.split('&').forEach(pair => {
+    if(!pair) return;
+    const [k,v] = pair.split('=').map(decodeURIComponent);
+    q[k]=v===undefined? '' : v;
+  });
+  return q;
+}
+
+// Robust CSV parser to handle quoted values and newlines inside quoted fields
+function parseCSV(text) {
+  const rows = [];
+  let cur = [];
+  let curVal = '';
+  let inQuotes = false;
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    const next = text[i+1];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (next === '"') {
+          // escaped quote
+          curVal += '"';
+          i += 2;
+          continue;
+        } else {
+          inQuotes = false;
+          i++;
+          continue;
+        }
+      } else {
+        curVal += ch;
+        i++;
+        continue;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+        i++;
+        continue;
+      }
+      if (ch === ',') {
+        cur.push(curVal);
+        curVal = '';
+        i++;
+        continue;
+      }
+      if (ch === '\r') { i++; continue; }
+      if (ch === '\n') {
+        cur.push(curVal);
+        rows.push(cur);
+        cur = [];
+        curVal = '';
+        i++;
+        continue;
+      }
+      curVal += ch;
+      i++;
+    }
+  }
+  // push last
+  if (curVal !== '' || cur.length > 0) {
+    cur.push(curVal);
+    rows.push(cur);
+  }
+  return rows;
+}
+
+// Convert CSV rows to array of objects using header row
+function rowsToObjects(rows) {
+  if (!rows || rows.length === 0) return [];
+  const header = rows[0].map(h => String(h||'').trim());
+  const data = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    // skip entirely empty row
+    if (!r.some(cell => cell && String(cell).trim() !== '')) continue;
+    const obj = {};
+    for (let j = 0; j < header.length; j++) {
+      const key = header[j] || `col${j}`;
+      obj[key] = r[j] !== undefined ? r[j] : '';
+    }
+    data.push(obj);
+  }
+  return data;
+}
+
+// Safe element setter
+function setText(id, htmlOrText, allowHTML=false){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(allowHTML) el.innerHTML = htmlOrText || '';
+  else el.textContent = htmlOrText || '';
+}
+
+// Render functions
+function setBG(url){
+  const el = document.getElementById('bg');
+  let final = url && String(url).trim() ? url : DEFAULT_BG;
+  // if Google Drive links or non-direct images are used, they may not display.
+  el.style.backgroundImage = `url("${final}")`;
+}
+
+function renderRow(row) {
+  if(!row) { showFallback(); return; }
+  // map using header keys provided by user
+  const title = row['title'] || '';
+  const eyebrow = row['eyebrow'] || row['id'] || ''; // if no eyebrow column, show id optionally
+  const blurb = row['blurb'] || '';
+  const bg = row['bg_image'] || row['bgImage'] || row['background'] || '';
+  const b1_text = row['button1_text'] || '';
+  const b1_url  = row['button1_url'] || '';
+  const b2_text = row['button2_text'] || '';
+  const b2_url  = row['button2_url'] || '';
+
+  // set
+  const eyebrowEl = document.getElementById('eyebrow');
+  if(eyebrow && eyebrow.trim() !== '') {
+    eyebrowEl.style.display = 'block';
+    setText('eyebrow', eyebrow);
+  } else {
+    eyebrowEl.style.display = 'none';
+  }
+
+  setText('title', title);
+  // allow some simple HTML in blurb (e.g., <strong>, <em>) — sanitize lightly by allowing only basic tags
+  const cleanBlurb = sanitizeHTML(blurb, ['b','strong','i','em','br','a','span']);
+  document.getElementById('blurb').innerHTML = cleanBlurb;
+
+  setBG(bg);
+
+  // buttons
+  const btnWrap = document.getElementById('buttons');
+  btnWrap.innerHTML = '';
+  if (b1_text) {
+    const a = document.createElement('a');
+    a.className = 'btn btn--primary';
+    a.href = b1_url && b1_url.trim() !== '' ? b1_url : '#';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = b1_text;
+    btnWrap.appendChild(a);
+  }
+  if (b2_text) {
+    const a = document.createElement('a');
+    a.className = 'btn btn--outline';
+    a.href = b2_url && b2_url.trim() !== '' ? b2_url : '#';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = b2_text;
+    btnWrap.appendChild(a);
+  }
+}
+
+// Simple sanitizer allowing only a small set of tags, strips attributes except href on <a>
+function sanitizeHTML(input, allowedTags=[]) {
+  if(!input) return '';
+  // Create a DOMParser-based sanitizer
+  const parser = new DOMParser();
+  const doc = parser.parseFromString('<div>' + input + '</div>', 'text/html');
+  const container = doc.body.firstChild;
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, null, false);
+  const nodesToRemove = [];
+  while(walker.nextNode()){
+    const node = walker.currentNode;
+    if(node.nodeType === Node.TEXT_NODE) continue;
+    const tag = node.nodeName.toLowerCase();
+    if(!allowedTags.includes(tag)){
+      nodesToRemove.push(node);
+      continue;
+    }
+    // Allowed tag: sanitize attributes
+    for (let i = node.attributes.length - 1; i >= 0; i--) {
+      const attr = node.attributes[i].name;
+      if (tag === 'a' && attr === 'href') {
+        // allow href but ensure safe protocols
+        const val = node.getAttribute('href') || '';
+        if (/^\s*(javascript:|data:)/i.test(val)) {
+          node.removeAttribute('href');
+        }
+        continue;
+      }
+      node.removeAttribute(attr);
+    }
+  }
+  // Remove disallowed nodes, keep their text children
+  nodesToRemove.forEach(n => {
+    const parent = n.parentNode;
+    while(n.firstChild) parent.insertBefore(n.firstChild, n);
+    parent.removeChild(n);
+  });
+  return container.innerHTML;
+}
+
+function showFallback(){
+  document.querySelector('.hero').style.display = 'none';
+  document.getElementById('fallback').style.display = 'flex';
+}
+
+// Main loader
+(function(){
+  const qs = qsParse();
+  const csvUrl = qs.csvUrl || DEFAULT_CSV;
+  const rowId = qs.id || qs.row || null;
+
+  fetch(csvUrl, { cache: 'no-cache' }).then(resp => {
+    if(!resp.ok) throw new Error('CSV fetch failed: ' + resp.status);
+    return resp.text();
+  }).then(text => {
+    const rows = parseCSV(text);
+    const objs = rowsToObjects(rows);
+
+    if(!objs || objs.length === 0) {
+      console.warn('No data rows found in CSV.');
+      showFallback();
+      return;
+    }
+
+    // find matching id
+    let selected = null;
+    if(rowId) {
+      selected = objs.find(r => {
+        const val = (r['id'] || r['ID'] || '').toString().trim();
+        return val === rowId.toString().trim();
+      });
+    }
+    if(!selected) selected = objs[0];
+    renderRow(selected);
+  }).catch(err => {
+    console.error('CSV load error', err);
+    // fallback to sample row
+    const sample = {
+      id: "sample",
+      title: "Membership",
+      blurb: "Whether you're stepping onto the ice for the first time, supporting a skater, coaching, officiating, or leading a club — there's a place for you in U.S. Figure Skating.",
+      bg_image: DEFAULT_BG,
+      button1_text: "Join a Club",
+      button1_url: "#join",
+      button2_text: "Find a Club",
+      button2_url: "#find"
+    };
+    renderRow(sample);
+  });
+})();
+</script>
+</body>
+</html>

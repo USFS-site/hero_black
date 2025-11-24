@@ -6,21 +6,28 @@
 <title>Hero (iframe)</title>
 <style>
   :root{
-    --hero-height: 520px; /* adjust for embed */
+    --hero-height: 540px; /* fixed as requested */
     --max-width: 1180px;
     --accent-red: #e03b2b;
     --text-white: #ffffff;
     --muted-white: rgba(255,255,255,0.9);
-    --overlay-gradient: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.0) 100%);
+    --overlay-gradient: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.0) 100%);
+    --font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   }
 
   html,body{
     height:100%;
     margin:0;
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    font-family: var(--font-family);
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
     background: #fff;
+  }
+
+  /* ensure iframe's intrinsic height matches hero */
+  body {
+    height: var(--hero-height);
+    overflow: hidden;
   }
 
   .hero {
@@ -32,19 +39,17 @@
     align-items: stretch;
   }
 
-  /* background image layer */
   .hero__bg{
     position:absolute;
     inset:0;
-    background-position: center center;
+    background-position: right center;
     background-size: cover;
     background-repeat: no-repeat;
     z-index:0;
-    filter: none;
     will-change: transform;
+    transform-origin: center;
   }
 
-  /* gradient overlay on left -> transparent to reveal image on right */
   .hero__overlay{
     position:absolute;
     inset:0;
@@ -52,7 +57,6 @@
     z-index:1;
   }
 
-  /* content container (left) */
   .hero__content {
     position: relative;
     z-index:2;
@@ -60,23 +64,24 @@
     flex-direction:column;
     justify-content:center;
     height:100%;
-    padding: 40px 28px;
+    padding: 48px 32px;
     box-sizing: border-box;
     color: var(--text-white);
+    width:100%;
     max-width: var(--max-width);
     margin-left: 40px;
   }
 
   .hero__inner {
     width: 100%;
-    max-width: 720px;
+    max-width: 760px;
   }
 
   .hero__eyebrow {
     font-size: 14px;
     font-weight:600;
-    opacity:0.85;
-    margin-bottom:16px;
+    opacity:0.95;
+    margin-bottom:12px;
     color: var(--muted-white);
   }
 
@@ -90,10 +95,10 @@
   }
 
   .hero__blurb {
-    font-size: clamp(16px, 1.6vw, 18px);
+    font-size: clamp(15px, 1.4vw, 18px);
     line-height: 1.6;
     color: rgba(255,255,255,0.95);
-    margin-bottom: 24px;
+    margin-bottom: 22px;
   }
 
   .hero__buttons {
@@ -125,29 +130,26 @@
   .btn--outline {
     background: transparent;
     color: #fff;
-    border: 2px solid rgba(255,255,255,0.9);
+    border: 2px solid rgba(255,255,255,0.95);
   }
 
-  /* small screen adjustments */
-  @media (max-width: 840px) {
-    :root{ --hero-height: 420px; }
+  @media (max-width: 920px) {
+    :root{ --hero-height: 480px; }
     .hero__content { margin-left: 18px; padding: 28px; max-width: 640px; }
   }
 
-  @media (max-width: 480px) {
-    :root{ --hero-height: 520px; } /* stack height for tall mobile hero */
+  @media (max-width: 640px) {
+    :root{ --hero-height: 520px; } /* keep enough vertical space on mobile */
     .hero {
       align-items:flex-end;
     }
-    .hero__content { padding: 20px; max-width: 100%; }
+    .hero__content { padding: 22px; max-width: 100%; margin-left: 12px; }
     .hero__title { font-size: 36px; }
     .hero__blurb { font-size: 15px; }
-    .hero__buttons { justify-content:flex-start; }
   }
 
-  /* Fallback / empty state */
   .hero__fallback {
-    display:flex;
+    display:none;
     align-items:center;
     justify-content:center;
     width:100%;
@@ -156,206 +158,13 @@
     color:#fff;
     font-size:16px;
   }
+
+  /* small utility */
+  .visually-hidden { position:absolute !important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
 </style>
 </head>
 <body>
-<div id="app">
-  <div class="hero" role="region" aria-label="Hero">
-    <div id="bg" class="hero__bg" aria-hidden="true"></div>
-    <div class="hero__overlay" aria-hidden="true"></div>
-
-    <div class="hero__content">
-      <div class="hero__inner" id="content">
-        <div class="hero__eyebrow" id="eyebrow" style="display:none">Membership</div>
-        <h1 class="hero__title" id="title">Loading…</h1>
-        <div class="hero__blurb" id="blurb"></div>
-        <div class="hero__buttons" id="buttons"></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="fallback" class="hero__fallback" style="display:none;">
-    Content not available.
-  </div>
-</div>
-
-<script>
-/*
-  How to use:
-  1. Create a Google Sheet with these columns (in the first row): 
-     id,title,eyebrow,blurb,bgImage,button1_text,button1_url,button2_text,button2_url
-  2. File -> Publish to the web (required)
-  3. Get your sheet id from the URL: https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit
-  4. Provide the SHEET_ID below or set via ?sheetId=... query param
-  5. Embed iframe with ?id=3 for a specific row (column 'id' matches).
-*/
-
-(function(){
-  // Default / testing values
-  const DEFAULT_SHEET_ID = ''; // <-- Optional: put your sheet ID here for testing
-  const DEFAULT_SHEET_NAME = ''; // optional: if blank, will use first sheet
-  // Default image for local testing (the path you provided in the conversation)
-  const DEFAULT_BG = "/mnt/data/Screenshot 2025-11-24 at 1.55.36 PM.png";
-
-  function parseQuery() {
-    const q = {};
-    location.search.replace(/^\?/, '').split('&').forEach(p=>{
-      if(!p) return;
-      const [k,v] = p.split('=').map(decodeURIComponent);
-      q[k]=v;
-    });
-    return q;
-  }
-
-  const qs = parseQuery();
-  const rowId = qs.id || qs.row || null;
-  const sheetId = qs.sheetId || DEFAULT_SHEET_ID;
-  const sheetName = qs.sheet || DEFAULT_SHEET_NAME;
-
-  // If you keep DEFAULT_SHEET_ID blank, the code will show fallback sample content
-  if(!sheetId){
-    console.warn('No Google Sheet ID provided. Showing sample/fallback content.');
-    renderSample();
-    return;
-  }
-
-  // Build Google Visualization URL
-  const base = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?`;
-  const params = [];
-  if (sheetName) params.push('sheet=' + encodeURIComponent(sheetName));
-  params.push('tqx=out:json'); // JSON-style response
-  const url = base + params.join('&');
-
-  fetch(url).then(r => r.text()).then(txt => {
-    // Google returns something like:  /*O_o*/\ngoogle.visualization.Query.setResponse({...});
-    const jsonText = txt.replace(/^[^{]*({[\s\S]*})[^}]*$/,'$1');
-    const data = JSON.parse(jsonText);
-    // Convert to array of objects using header row
-    const table = data.table;
-    if(!table) throw new Error('Unexpected sheet format');
-    const cols = table.cols.map(c => (c && c.label) ? c.label.trim() : '');
-    const rows = table.rows.map(r => {
-      const obj = {};
-      r.c.forEach((cell,i) => {
-        obj[cols[i] || 'col' + i] = cell && cell.v !== null ? cell.v : '';
-      });
-      return obj;
-    });
-
-    // Find requested row by id field
-    let selected;
-    if(rowId){
-      selected = rows.find(row => {
-        const raw = String(row.id || row.ID || row.Id || row._id || '').trim();
-        return raw === String(rowId).trim();
-      });
-    }
-    if(!selected) {
-      // fall back to first row
-      selected = rows[0];
-    }
-    if(!selected){
-      showFallback();
-      return;
-    }
-    renderFromRow(selected);
-  }).catch(err => {
-    console.error(err);
-    showFallback();
-  });
-
-  // ---- Render helpers ----
-  function setBG(url){
-    const el = document.getElementById('bg');
-    if(!url) url = DEFAULT_BG;
-    // Use 1920x1080 image size assumption in stylesheet - ensure cover
-    el.style.backgroundImage = `url("${url}")`;
-  }
-
-  function renderFromRow(row){
-    // Safely pick values with many possible column names
-    const get = (names) => {
-      for(const n of names){
-        if(row.hasOwnProperty(n) && row[n] !== '') return row[n];
-      }
-      return '';
-    };
-
-    const eyebrow = get(['eyebrow','eyebrow_text','category','kicker']);
-    const title = get(['title','heading','name']) || 'Title';
-    const blurb = get(['blurb','description','short_blurb','subtitle']) || '';
-    const bg = get(['bgImage','background','image','bg_image']) || '';
-    const b1_text = get(['button1_text','btn1_text','cta1_text']) || '';
-    const b1_url  = get(['button1_url','btn1_url','cta1_url']) || '';
-    const b2_text = get(['button2_text','btn2_text','cta2_text']) || '';
-    const b2_url  = get(['button2_url','btn2_url','cta2_url']) || '';
-
-    // set elements
-    const eyebrowEl = document.getElementById('eyebrow');
-    eyebrowEl.style.display = eyebrow ? 'block' : 'none';
-    eyebrowEl.textContent = eyebrow;
-
-    document.getElementById('title').textContent = title;
-    const blurbEl = document.getElementById('blurb');
-    blurbEl.innerHTML = blurb;
-
-    // background
-    setBG(bg || DEFAULT_BG);
-
-    // buttons
-    const btnWrap = document.getElementById('buttons');
-    btnWrap.innerHTML = '';
-    if(b1_text){
-      const a = document.createElement('a');
-      a.className = 'btn btn--primary';
-      a.href = b1_url || '#';
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.textContent = b1_text;
-      btnWrap.appendChild(a);
-    }
-    if(b2_text){
-      const a = document.createElement('a');
-      a.className = 'btn btn--outline';
-      a.href = b2_url || '#';
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.textContent = b2_text;
-      btnWrap.appendChild(a);
-    }
-  }
-
-  function showFallback(){
-    document.querySelector('.hero').style.display = 'none';
-    document.getElementById('fallback').style.display = 'flex';
-  }
-
-  // Minimal sample when no sheetId present
-  function renderSample(){
-    const sample = {
-      eyebrow: "Membership",
-      title: "Membership",
-      blurb: "Whether you're stepping onto the ice for the first time, supporting a skater, coaching, officiating, or leading a club — there's a place for you in U.S. Figure Skating.",
-      bgImage: DEFAULT_BG,
-      button1_text: "Join a Club",
-      button1_url: "#join",
-      button2_text: "Find a Club",
-      button2_url: "#find"
-    };
-    // Use the same rendering path
-    renderFromRow({
-      eyebrow: sample.eyebrow,
-      title: sample.title,
-      blurb: sample.blurb,
-      bgImage: sample.bgImage,
-      button1_text: sample.button1_text,
-      button1_url: sample.button1_url,
-      button2_text: sample.button2_text,
-      button2_url: sample.button2_url
-    });
-  }
-
-})();
-</script>
-</body>
-</html>
+  <div id="app">
+    <div class="hero" role="region" aria-label="Hero">
+      <div id="bg" class="hero__bg" aria-hidden="true"></div>
+      <div class="hero__overlay" a

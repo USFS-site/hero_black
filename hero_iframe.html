@@ -1,141 +1,129 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Hero (iframe)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hero Iframe</title>
 
-  <!-- Plus Jakarta Sans -->
+  <!-- Plus Jakarta Sans Font -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- PapaParse (robust CSV parsing) -->
+  <!-- PapaParse for robust CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
   <style>
     :root {
       --hero-height: 540px;
-      --max-width: 1180px;
-      --title-size: 48px;
-      --accent-red: #e03b2b;
       --white: #ffffff;
+      --overlay-gradient: linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.85) 0%,
+        rgba(0, 0, 0, 0.6) 28%,
+        rgba(0, 0, 0, 0.25) 50%,
+        rgba(0, 0, 0, 0) 100%
+      );
     }
 
-    html,body{
-      height:100%;
-      margin:0;
+    html, body {
+      margin: 0;
+      height: 100%;
       font-family: "Plus Jakarta Sans", arial, sans-serif;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      background: #fff;
+      background: #000;
+      overflow: hidden;
     }
 
-    /* Make the iframe's intrinsic height match the hero */
-    body { height: var(--hero-height); overflow: hidden; }
+    /* Fix iframe's height */
+    body {
+      height: var(--hero-height);
+    }
 
     .hero {
       position: relative;
       width: 100%;
       height: var(--hero-height);
-      overflow: hidden;
-      display:flex;
-      align-items:stretch;
-      justify-content:flex-start;
+      display: flex;
+      align-items: center;
       box-sizing: border-box;
       color: var(--white);
     }
 
-    /* Background image */
-    .hero__bg{
-      position:absolute;
-      inset:0;
-      background-position: right center;
+    .hero__bg {
+      position: absolute;
+      inset: 0;
       background-size: cover;
-      background-repeat: no-repeat;
-      z-index:0;
-      transform-origin:center;
+      background-position: center;
+      z-index: 0;
     }
 
-    /* Left->right heavy black gradient to transparent (matches screenshot) */
-    .hero__overlay{
-      position:absolute;
-      inset:0;
-      z-index:1;
-      background: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 28%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.0) 100%);
+    .hero__overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--overlay-gradient);
+      z-index: 1;
     }
 
-    /* Content column */
     .hero__content {
       position: relative;
-      z-index:2;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      height:100%;
-      padding: 56px 32px;
-      box-sizing:border-box;
-      max-width: var(--max-width);
+      z-index: 2;
+      max-width: 720px;
       margin-left: 40px;
+      padding: 48px 32px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
     }
 
-    .hero__inner { max-width: 720px; }
-
-    /* Eyebrow (optional small label) */
     .hero__eyebrow {
       font-size: 14px;
       font-weight: 600;
-      color: rgba(255,255,255,0.95);
+      color: rgba(255,255,255,0.9);
       margin-bottom: 8px;
-      letter-spacing: 0.02em;
+      display: none;
     }
 
-    /* Title: EXACT styles you provided + uppercase forced */
     .hero__title {
-      font-family: "Plus Jakarta Sans", arial, sans-serif;
-      font-size: var(--title-size);
-      font-weight: 800;
+      font-size: 48px;
       font-style: italic;
+      font-weight: 800;
       line-height: 150%;
       color: #fff;
-      margin: 0 0 24px 0;
-      text-transform: uppercase; /* force uppercase per your choice */
+      margin-bottom: 24px;
+      text-transform: uppercase;
       letter-spacing: 0;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.25); /* soft shadow similar to screenshot */
+      text-shadow: 0 2px 6px rgba(0,0,0,0.25);
     }
 
-    /* Blurb: "font: 1rem/1.5 'Plus Jakarta Sans',arial,sans-serif;" */
     .hero__blurb {
-      font: 1rem/1.5 "Plus Jakarta Sans", arial, sans-serif;
+      font: 1rem / 1.5 "Plus Jakarta Sans", arial, sans-serif;
       color: rgba(255,255,255,0.95);
-      margin: 0 0 20px 0;
+      margin-bottom: 24px;
       max-width: 60ch;
       white-space: normal;
     }
 
     .hero__buttons {
-      display:flex;
-      gap:12px;
-      align-items:center;
-      flex-wrap:wrap;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .btn {
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 12px 20px;
-      min-height:44px;
-      border-radius:8px;
-      font-weight:700;
-      text-decoration:none;
-      box-sizing:border-box;
-      cursor:pointer;
-      line-height:1;
+      min-height: 44px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      box-sizing: border-box;
     }
 
     .btn--primary {
-      background: linear-gradient(180deg, var(--accent-red), #c93a30);
+      background: linear-gradient(180deg, #e03b2b, #c93a30);
       color: #fff;
       border: none;
       box-shadow: 0 6px 18px rgba(224,59,43,0.18);
@@ -147,212 +135,134 @@
       border: 2px solid rgba(255,255,255,0.9);
     }
 
-    /* Responsive tweaks */
     @media (max-width: 920px) {
       :root { --hero-height: 480px; }
-      .hero__content { margin-left: 18px; padding: 36px 24px; }
+      .hero__content { margin-left: 24px; padding: 36px 24px; }
     }
 
     @media (max-width: 640px) {
       :root { --hero-height: 520px; }
-      .hero { align-items:flex-end; }
-      .hero__content { padding: 28px 20px; margin-left: 12px; }
+      .hero { align-items: flex-end; }
       .hero__title { font-size: 38px; }
       .hero__blurb { font-size: 15px; }
+      .hero__content { padding: 28px 20px; margin-left: 12px; }
     }
 
-    /* Fallback */
     .hero__fallback {
-      display:none;
-      align-items:center;
-      justify-content:center;
-      width:100%;
-      height:100%;
-      background:#222;
-      color:#fff;
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: #222;
+      color: #fff;
+      font-size: 16px;
+      align-items: center;
+      justify-content: center;
+      display: flex;
     }
   </style>
 </head>
+
 <body>
-  <div id="app">
-    <div class="hero" role="region" aria-label="Hero">
-      <div id="bg" class="hero__bg" aria-hidden="true"></div>
-      <div class="hero__overlay" aria-hidden="true"></div>
-
-      <div class="hero__content">
-        <div class="hero__inner">
-          <div id="eyebrow" class="hero__eyebrow" style="display:none"></div>
-          <h1 id="title" class="hero__title">Loading…</h1>
-          <div id="blurb" class="hero__blurb"></div>
-          <div id="buttons" class="hero__buttons"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="fallback" class="hero__fallback" style="display:none;">
-      Content not available.
+  <div class="hero">
+    <div id="bg" class="hero__bg"></div>
+    <div class="hero__overlay"></div>
+    <div class="hero__content">
+      <div id="eyebrow" class="hero__eyebrow"></div>
+      <h1 id="title" class="hero__title">Loading…</h1>
+      <div id="blurb" class="hero__blurb"></div>
+      <div id="buttons" class="hero__buttons"></div>
     </div>
   </div>
+  <div id="fallback" class="hero__fallback">Content not available</div>
 
-<script>
-/*
-  Usage:
-    - Upload this file to GitHub Pages.
-    - Embed in Sidearm by placing only the URL in the iframe field:
-        https://yourgithub.io/hero_iframe.html?id=1
-    - Optional query params:
-        ?csvUrl=...    (use this to override the default CSV)
-        ?id=1          (row id to select)
-*/
+  <script>
+    (function(){
+      const DEFAULT_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo6JAV5prsmpxnt6fl9BHXvaL25XD-hzRAyUe50rx4_ImrfjUjhjqKW72XW1QX2gRJwH6A3YXtTgmg/pub?output=csv";
+      const DEFAULT_BG = "https://usfs-site.github.io/hero_black/your-default-bg.jpg"; // replace with your hosted default image
 
-// DEFAULT CSV (your published sheet CSV)
-const DEFAULT_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo6JAV5prsmpxnt6fl9BHXvaL25XD-hzRAyUe50rx4_ImrfjUjhjqKW72XW1QX2gRJwH6A3YXtTgmg/pub?output=csv";
+      function getParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
 
-// Default background -> use the uploaded screenshot path (we'll transform this to a URL in your deploy pipeline)
-const DEFAULT_BG = "/mnt/data/Screenshot 2025-11-24 at 1.55.36 PM.png";
+      const targetId = getParam("id");
+      const csvUrl = getParam("csvUrl") || DEFAULT_CSV;
 
-function qs() {
-  const out = {};
-  location.search.replace(/^\?/, '').split('&').forEach(p => {
-    if(!p) return;
-    const [k,v] = p.split('=').map(decodeURIComponent);
-    out[k] = v===undefined ? '' : v;
-  });
-  return out;
-}
+      console.log("Target ID:", targetId);
+      console.log("CSV URL:", csvUrl);
 
-function showFallback(){
-  document.querySelector('.hero').style.display = 'none';
-  document.getElementById('fallback').style.display = 'flex';
-}
+      fetch(csvUrl, { cache: 'no-cache' })
+        .then(r => {
+          console.log("Fetched CSV, status:", r.status);
+          return r.text();
+        })
+        .then(csv => {
+          console.log("CSV text (start):", csv.substring(0, 200));
+          const parsed = Papa.parse(csv, {
+            header: true,
+            skipEmptyLines: true,
+            transformHeader: h => h.trim()
+          });
 
-function safeText(str){
-  return (str===null || str===undefined) ? '' : String(str);
-}
+          console.log("Parsed data:", parsed.data);
 
-(function init(){
-  const params = qs();
-  const csvUrl = params.csvUrl || DEFAULT_CSV;
-  const targetId = params.id || params.row || null;
-  console.log("Target ID:", targetId);
-  console.log("CSV URL:", csvUrl);
+          let row;
+          if (targetId) {
+            row = parsed.data.find(r => String(r.id).trim() === String(targetId).trim());
+          }
+          if (!row) {
+            row = parsed.data[0];
+          }
+          console.log("Selected row:", row);
 
-  // Fetch CSV and parse with PapaParse
-  fetch(csvUrl, {cache: 'no-cache'}).then(resp => {
-    console.log("Fetched CSV, status:", resp.status);
-    if(!resp.ok) throw new Error('CSV fetch returned ' + resp.status);
-    return resp.text();
-  }).then(csvText => {
-    console.log("CSV text (first 300 chars):", csvText ? csvText.substring(0,300) : '(empty)');
-    const parsed = Papa.parse(csvText, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: h => (h || '').trim()
-    });
+          if (!row) {
+            document.getElementById("fallback").style.display = "flex";
+            return;
+          }
 
-    if(!parsed || !parsed.data || parsed.data.length === 0) {
-      console.warn("No rows parsed from CSV.");
-      showFallback();
-      return;
-    }
+          // Set background
+          const bgUrl = (row.bg_image && row.bg_image.trim()) ? row.bg_image : DEFAULT_BG;
+          document.getElementById("bg").style.backgroundImage = `url("${bgUrl}")`;
 
-    console.log("Parsed rows (first 3):", parsed.data.slice(0,3));
+          // Eyebrow (optional)
+          const eyebrow = row.eyebrow || row.id || "";
+          const e = document.getElementById("eyebrow");
+          if (eyebrow) {
+            e.style.display = "block";
+            e.textContent = eyebrow;
+          }
 
-    // If targetId provided, find row where id matches (string compare, trimmed)
-    let selected = null;
-    if(targetId) {
-      const t = String(targetId).trim();
-      selected = parsed.data.find(r => {
-        const candidate = (r.id || r.ID || r.Id || '').toString().trim();
-        return candidate === t;
-      });
-    }
-    if(!selected) selected = parsed.data[0]; // fallback to first row
-    console.log("Selected row:", selected);
+          // Title & blurb
+          document.getElementById("title").textContent = (row.title || "").toUpperCase();
+          document.getElementById("blurb").textContent = row.blurb || "";
 
-    if(!selected) { showFallback(); return; }
-
-    // Map fields (user-specified header names: id, title, blurb, bg_image, button1_text, button1_url, button2_text, button2_url)
-    const title = safeText(selected.title || selected.Title || '');
-    const eyebrow = safeText(selected.eyebrow || selected.Eyebrow || selected.id || '');
-    const blurb = safeText(selected.blurb || selected.Blurb || '');
-    const bg = safeText(selected.bg_image || selected.bgImage || selected.background || '');
-    const b1_text = safeText(selected.button1_text || selected.button1 || selected.cta1_text || '');
-    const b1_url  = safeText(selected.button1_url || selected.button1link || selected.cta1_url || '');
-    const b2_text = safeText(selected.button2_text || selected.button2 || selected.cta2_text || '');
-    const b2_url  = safeText(selected.button2_url || selected.button2link || selected.cta2_url || '');
-
-    // Apply DOM values (ID is never shown)
-    const eyebrowEl = document.getElementById('eyebrow');
-    if(eyebrow && eyebrow.trim() !== '') {
-      eyebrowEl.style.display = 'block';
-      eyebrowEl.textContent = eyebrow;
-    } else {
-      eyebrowEl.style.display = 'none';
-    }
-
-    // Title - force uppercase via CSS; insert raw text from sheet
-    document.getElementById('title').textContent = title || '';
-
-    // Blurb - allow minimal inline HTML (basic tags) by sanitizing: keep text only to be safe
-    // (If you need HTML allowed, we can add a small sanitizer and permit <strong>, <em>, <a>)
-    document.getElementById('blurb').textContent = blurb || '';
-
-    // Background image - priority: sheet value -> default screenshot
-    const bgFinal = (bg && bg.trim()) ? bg.trim() : DEFAULT_BG;
-    document.getElementById('bg').style.backgroundImage = `url("${bgFinal}")`;
-
-    // Buttons
-    const btnWrap = document.getElementById('buttons');
-    btnWrap.innerHTML = '';
-    if(b1_text){
-      const a = document.createElement('a');
-      a.className = 'btn btn--primary';
-      a.href = b1_url && b1_url.trim() ? b1_url : '#';
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.textContent = b1_text;
-      btnWrap.appendChild(a);
-    }
-    if(b2_text){
-      const a = document.createElement('a');
-      a.className = 'btn btn--outline';
-      a.href = b2_url && b2_url.trim() ? b2_url : '#';
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.textContent = b2_text;
-      btnWrap.appendChild(a);
-    }
-  }).catch(err => {
-    console.error("CSV load/parse error:", err);
-    // Fallback sample content so something displays instead of blank page
-    const sample = {
-      title: "MEMBERSHIP",
-      blurb: "Whether you're stepping onto the ice for the first time, supporting a skater, coaching, officiating, or leading a club — there's a place for you in U.S. Figure Skating.",
-      bg_image: DEFAULT_BG,
-      button1_text: "Join a Club",
-      button1_url: "#join",
-      button2_text: "Find a Club",
-      button2_url: "#find"
-    };
-    document.getElementById('title').textContent = sample.title;
-    document.getElementById('blurb').textContent = sample.blurb;
-    document.getElementById('bg').style.backgroundImage = `url("${sample.bg_image}")`;
-
-    const btnWrap = document.getElementById('buttons');
-    btnWrap.innerHTML = '';
-    const a1 = document.createElement('a');
-    a1.className = 'btn btn--primary';
-    a1.href = sample.button1_url;
-    a1.textContent = sample.button1_text;
-    btnWrap.appendChild(a1);
-    const a2 = document.createElement('a');
-    a2.className = 'btn btn--outline';
-    a2.href = sample.button2_url;
-    a2.textContent = sample.button2_text;
-    btnWrap.appendChild(a2);
-  });
-})();
-</script>
+          // Buttons
+          const btnWrap = document.getElementById("buttons");
+          btnWrap.innerHTML = "";
+          if (row.button1_text) {
+            const a = document.createElement("a");
+            a.className = "btn btn--primary";
+            a.href = row.button1_url || "#";
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.textContent = row.button1_text;
+            btnWrap.appendChild(a);
+          }
+          if (row.button2_text) {
+            const a2 = document.createElement("a");
+            a2.className = "btn btn--outline";
+            a2.href = row.button2_url || "#";
+            a2.target = "_blank";
+            a2.rel = "noopener noreferrer";
+            a2.textContent = row.button2_text;
+            btnWrap.appendChild(a2);
+          }
+        })
+        .catch(err => {
+          console.error("Error loading CSV:", err);
+          document.getElementById("fallback").style.display = "flex";
+        });
+    })();
+  </script>
 </body>
 </html>

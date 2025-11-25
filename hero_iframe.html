@@ -46,15 +46,17 @@
       box-sizing: border-box;
       color: var(--white);
     }
-
+    
     .hero__bg {
       position: absolute;
       inset: 0;
+      width: 100%;
+      height: 100%;
       background-size: cover;
       background-position: center;
       z-index: 0;
     }
-
+    
     .hero__overlay {
       position: absolute;
       inset: 0;
@@ -182,7 +184,7 @@
 
   // ⭐ IMPORTANT: Replace with ANY real hosted image
   const DEFAULT_BG =
-    "https://usfs-site.github.io/hero_black/default.jpg";
+    "https://usfigureskatingfanzone.com/images/2025/8/22/compete_0.jpg";
 
   function getParam(name) {
     const params = new URLSearchParams(window.location.search);

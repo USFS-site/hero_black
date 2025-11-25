@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dynamic Hero</title>
 
-<!-- Import Plus Jakarta Sans -->
+<!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -32,13 +32,12 @@
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        font-family: "Plus Jakarta Sans", arial, sans-serif;
     }
 
     .overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0));
+        background: linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0));
     }
 
     .hero-content {
@@ -50,14 +49,14 @@
     h1 {
         font-size: 48px;
         line-height: 1.1;
-        margin-bottom: 20px;
+        margin: 0 0 20px;
         font-weight: 700;
     }
 
     p {
         font-size: 18px;
-        line-height: 1.4;
-        margin-bottom: 24px;
+        line-height: 1.5;
+        margin: 0 0 28px;
         font-weight: 400;
     }
 
@@ -102,48 +101,81 @@
 </div>
 
 <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo6JAV5prsmpxnt6fl9BHXvaL25XD-hzRAyUe50rx4_ImrfjUjhjqKW72XW1QX2gRJwH6A3YXtTgmg/pub?output=csv";
+const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo6JAV5prsmpxnt6fl9BHXvaL25XD-hzRAyUe50rx4_ImrfjUjhjqKW72XW1QX2gRJwH6A3YXtTgmg/pub?output=csv";
 
-    // Get ?id=###
+// Robust CSV parser (handles commas, quotes, line breaks)
+function parseCSV(str) {
+    const rows = [];
+    let current = '';
+    let row = [];
+    let insideQuotes = false;
+
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        const next = str[i + 1];
+
+        if (char === '"' && insideQuotes && next === '"') {
+            current += '"';
+            i++;
+        } else if (char === '"') {
+            insideQuotes = !insideQuotes;
+        } else if (char === ',' && !insideQuotes) {
+            row.push(current);
+            current = '';
+        } else if ((char === '\n' || char === '\r') && !insideQuotes) {
+            if (current || row.length) {
+                row.push(current);
+                rows.push(row);
+                row = [];
+                current = '';
+            }
+        } else {
+            current += char;
+        }
+    }
+
+    if (current || row.length) {
+        row.push(current);
+        rows.push(row);
+    }
+
+    return rows;
+}
+
+async function loadData() {
     const params = new URLSearchParams(window.location.search);
     const targetID = params.get("id");
 
-    async function loadData() {
-        const response = await fetch(sheetURL);
-        const csvText = await response.text();
+    const response = await fetch(sheetURL);
+    const csv = await response.text();
+    const rows = parseCSV(csv);
 
-        const rows = csvText.split("\n").map(r => r.split(","));
+    const headers = rows[0].map(h => h.trim());
+    const data = rows.slice(1);
 
-        const headers = rows[0];
-        const dataRows = rows.slice(1);
+    const row = data.find(r => r[0] === targetID);
 
-        // Find the row with matching ID
-        const row = dataRows.find(r => r[0] === targetID);
-
-        if (!row) {
-            document.getElementById("title").textContent = "Not Found";
-            return;
-        }
-
-        // Map values
-        const rowData = {};
-        headers.forEach((h, i) => rowData[h.trim()] = row[i]);
-
-        // Apply content — NOTE: ID is NOT shown
-        document.getElementById("title").textContent = rowData.title;
-        document.getElementById("blurb").textContent = rowData.blurb;
-
-        document.getElementById("hero").style.backgroundImage =
-            `url("${rowData.bg_image}")`;
-
-        document.getElementById("btn1").textContent = rowData.button1_text;
-        document.getElementById("btn1").href = rowData.button1_url;
-
-        document.getElementById("btn2").textContent = rowData.button2_text;
-        document.getElementById("btn2").href = rowData.button2_url;
+    if (!row) {
+        document.getElementById("title").textContent = "Hero Not Found";
+        return;
     }
 
-    loadData();
+    const rowData = {};
+    headers.forEach((h, i) => rowData[h] = row[i] || "");
+
+    // Apply values
+    document.getElementById("title").textContent = rowData.title;
+    document.getElementById("blurb").textContent = rowData.blurb;
+    document.getElementById("hero").style.backgroundImage = `url("${rowData.bg_image}")`;
+
+    document.getElementById("btn1").textContent = rowData.button1_text;
+    document.getElementById("btn1").href = rowData.button1_url;
+
+    document.getElementById("btn2").textContent = rowData.button2_text;
+    document.getElementById("btn2").href = rowData.button2_url;
+}
+
+loadData();
 </script>
 
 </body>

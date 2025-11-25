@@ -175,94 +175,91 @@
   </div>
   <div id="fallback" class="hero__fallback">Content not available</div>
 
-  <script>
-    (function(){
-      const DEFAULT_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo6JAV5prsmpxnt6fl9BHXvaL25XD-hzRAyUe50rx4_ImrfjUjhjqKW72XW1QX2gRJwH6A3YXtTgmg/pub?output=csv";
-      const DEFAULT_BG = "https://usfs-site.github.io/hero_black/your-default-bg.jpg"; // replace with your hosted default image
+<script>
+(function() {
+  const DEFAULT_CSV =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo6JAV5prsmpxnt6fl9BHXvaL25XD-hzRAyUe50rx4_ImrfjUjhjqKW72XW1QX2gRJwH6A3YXtTgmg/pub?output=csv";
 
-      function getParam(name) {
-        const params = new URLSearchParams(window.location.search);
-        return params.get(name);
+  // ⭐ IMPORTANT: Replace with ANY real hosted image
+  const DEFAULT_BG =
+    "https://usfs-site.github.io/hero_black/default.jpg";
+
+  function getParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  const targetId = getParam("id");
+  const csvUrl = getParam("csvUrl") || DEFAULT_CSV;
+
+  console.log("Target ID:", targetId);
+  console.log("CSV URL:", csvUrl);
+
+  fetch(csvUrl, { cache: "no-cache" })
+    .then((r) => r.text())
+    .then((csv) => {
+      const parsed = Papa.parse(csv, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (h) => h.trim(),
+      });
+
+      console.log("Parsed data:", parsed.data);
+
+      let row = parsed.data.find((r) => r.id === targetId);
+      if (!row) row = parsed.data[0]; // default to first row
+
+      console.log("Selected row:", row);
+
+      if (!row) {
+        document.getElementById("fallback").style.display = "flex";
+        return;
       }
 
-      const targetId = getParam("id");
-      const csvUrl = getParam("csvUrl") || DEFAULT_CSV;
+      // ⭐ NO MORE FALLBACK TO ID — fixes the “1”
+      const eyebrowField = row.eyebrow?.trim();
+      const eyebrowEl = document.getElementById("eyebrow");
+      if (eyebrowField) {
+        eyebrowEl.style.display = "block";
+        eyebrowEl.textContent = eyebrowField;
+      }
 
-      console.log("Target ID:", targetId);
-      console.log("CSV URL:", csvUrl);
+      document.getElementById("title").textContent =
+        (row.title || "").toUpperCase();
+      document.getElementById("blurb").textContent = row.blurb || "";
 
-      fetch(csvUrl, { cache: 'no-cache' })
-        .then(r => {
-          console.log("Fetched CSV, status:", r.status);
-          return r.text();
-        })
-        .then(csv => {
-          console.log("CSV text (start):", csv.substring(0, 200));
-          const parsed = Papa.parse(csv, {
-            header: true,
-            skipEmptyLines: true,
-            transformHeader: h => h.trim()
-          });
+      // Background
+      const bg = row.bg_image?.trim()
+        ? row.bg_image.trim()
+        : DEFAULT_BG;
+      document.getElementById("bg").style.backgroundImage = `url('${bg}')`;
 
-          console.log("Parsed data:", parsed.data);
+      // Buttons
+      const btnWrap = document.getElementById("buttons");
+      btnWrap.innerHTML = "";
 
-          let row;
-          if (targetId) {
-            row = parsed.data.find(r => String(r.id).trim() === String(targetId).trim());
-          }
-          if (!row) {
-            row = parsed.data[0];
-          }
-          console.log("Selected row:", row);
+      if (row.button1_text) {
+        const b1 = document.createElement("a");
+        b1.className = "btn btn--primary";
+        b1.href = row.button1_url || "#";
+        b1.textContent = row.button1_text;
+        btnWrap.appendChild(b1);
+      }
 
-          if (!row) {
-            document.getElementById("fallback").style.display = "flex";
-            return;
-          }
+      if (row.button2_text) {
+        const b2 = document.createElement("a");
+        b2.className = "btn btn--outline";
+        b2.href = row.button2_url || "#";
+        b2.textContent = row.button2_text;
+        btnWrap.appendChild(b2);
+      }
+    })
+    .catch((err) => {
+      console.error("Error loading CSV:", err);
+      document.getElementById("fallback").style.display = "flex";
+    });
+})();
+</script>
 
-          // Set background
-          const bgUrl = (row.bg_image && row.bg_image.trim()) ? row.bg_image : DEFAULT_BG;
-          document.getElementById("bg").style.backgroundImage = `url("${bgUrl}")`;
-
-          // Eyebrow (optional)
-          const eyebrow = row.eyebrow || row.id || "";
-          const e = document.getElementById("eyebrow");
-          if (eyebrow) {
-            e.style.display = "block";
-            e.textContent = eyebrow;
-          }
-
-          // Title & blurb
-          document.getElementById("title").textContent = (row.title || "").toUpperCase();
-          document.getElementById("blurb").textContent = row.blurb || "";
-
-          // Buttons
-          const btnWrap = document.getElementById("buttons");
-          btnWrap.innerHTML = "";
-          if (row.button1_text) {
-            const a = document.createElement("a");
-            a.className = "btn btn--primary";
-            a.href = row.button1_url || "#";
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
-            a.textContent = row.button1_text;
-            btnWrap.appendChild(a);
-          }
-          if (row.button2_text) {
-            const a2 = document.createElement("a");
-            a2.className = "btn btn--outline";
-            a2.href = row.button2_url || "#";
-            a2.target = "_blank";
-            a2.rel = "noopener noreferrer";
-            a2.textContent = row.button2_text;
-            btnWrap.appendChild(a2);
-          }
-        })
-        .catch(err => {
-          console.error("Error loading CSV:", err);
-          document.getElementById("fallback").style.display = "flex";
-        });
-    })();
-  </script>
 </body>
 </html>

@@ -41,26 +41,21 @@
       width: 100%;
       height: var(--hero-height);
       display: flex;
-      align-items: flex-start;
+      align-items: flex-start; /* top-align content */
       box-sizing: border-box;
       color: var(--white);
-      overflow: hidden;
     }
 
-    /* Image wrapper */
-    .hero__bg-wrapper {
+    /* Background image with cover and right alignment */
+    .hero__bg {
       position: absolute;
       inset: 0;
-      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background-size: cover;          /* fills hero completely */
+      background-position: right center; /* align right */
+      background-repeat: no-repeat;
       z-index: 0;
-    }
-
-    .hero__bg-wrapper img {
-      position: absolute;
-      right: 0;      /* align image to right */
-      top: 0;
-      height: 100%;  /* fill hero height */
-      width: auto;   /* maintain aspect ratio */
     }
 
     .hero__overlay {
@@ -78,7 +73,7 @@
       padding: 48px 32px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
+      justify-content: flex-start;  /* align content to top */
       height: 100%;
     }
 
@@ -172,9 +167,7 @@
 
 <body>
   <div class="hero">
-    <div class="hero__bg-wrapper">
-      <img id="bg-img" src="" alt="Hero background" />
-    </div>
+    <div id="bg" class="hero__bg"></div>
     <div class="hero__overlay"></div>
     <div class="hero__content">
       <div id="eyebrow" class="hero__eyebrow"></div>
@@ -230,17 +223,7 @@
 
       // Background image
       const bgUrl = row.bg_image?.trim() || DEFAULT_BG;
-      const bgImg = document.getElementById("bg-img");
-      const img = new Image();
-      img.onload = function() {
-        bgImg.src = bgUrl;
-        document.getElementById("fallback").style.display = "none";
-      };
-      img.onerror = function() {
-        bgImg.src = DEFAULT_BG;
-        document.getElementById("fallback").style.display = "none";
-      };
-      img.src = bgUrl;
+      document.getElementById("bg").style.backgroundImage = `url('${encodeURI(bgUrl)}')`;
 
       // Buttons
       const btnWrap = document.getElementById("buttons");

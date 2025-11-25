@@ -8,7 +8,7 @@
   <!-- Plus Jakarta Sans Font -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- PapaParse for robust CSV parsing -->
+  <!-- PapaParse for CSV parsing -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
   <style>
@@ -32,7 +32,6 @@
       overflow: hidden;
     }
 
-    /* Fix iframe's height */
     body {
       height: var(--hero-height);
     }
@@ -42,21 +41,21 @@
       width: 100%;
       height: var(--hero-height);
       display: flex;
-      align-items: center;
+      align-items: flex-start; /* align content to top */
       box-sizing: border-box;
       color: var(--white);
     }
-    
+
     .hero__bg {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      background-size: cover;
-      background-position: center;
+      background-size: cover;        /* fill container while keeping aspect ratio */
+      background-position: right center; /* shift image to the right to avoid cropping faces */
       z-index: 0;
     }
-    
+
     .hero__overlay {
       position: absolute;
       inset: 0;
@@ -70,11 +69,9 @@
       max-width: 720px;
       margin-left: 40px;
       padding: 48px 32px;
-      box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start; /* align items to top */
-      padding-top: 80px;
+      justify-content: flex-start;  /* align content to top */
       height: 100%;
     }
 
@@ -141,12 +138,13 @@
     @media (max-width: 920px) {
       :root { --hero-height: 480px; }
       .hero__content { margin-left: 24px; padding: 36px 24px; }
+      .hero__title { font-size: 38px; }
     }
 
     @media (max-width: 640px) {
       :root { --hero-height: 520px; }
       .hero { align-items: flex-end; }
-      .hero__title { font-size: 38px; }
+      .hero__title { font-size: 32px; }
       .hero__blurb { font-size: 15px; }
       .hero__content { padding: 28px 20px; margin-left: 12px; }
     }
@@ -177,6 +175,7 @@
     </div>
   </div>
   <div id="fallback" class="hero__fallback">Content not available</div>
+
 <script>
 (function() {
   const DEFAULT_CSV =
@@ -193,9 +192,6 @@
   const targetId = getParam("id");
   const csvUrl = getParam("csvUrl") || DEFAULT_CSV;
 
-  console.log("Target ID:", targetId);
-  console.log("CSV URL:", csvUrl);
-
   fetch(csvUrl, { cache: "no-cache" })
     .then(r => r.text())
     .then(csv => {
@@ -205,19 +201,15 @@
         transformHeader: h => h.trim()
       });
 
-      console.log("Parsed data:", parsed.data);
-
       let row = parsed.data.find(r => r.id === targetId);
       if (!row) row = parsed.data[0];
-
-      console.log("Selected row:", row);
 
       if (!row) {
         document.getElementById("fallback").style.display = "flex";
         return;
       }
 
-      // Set eyebrow
+      // Eyebrow
       const eyebrowEl = document.getElementById("eyebrow");
       if (row.eyebrow?.trim()) {
         eyebrowEl.style.display = "block";
@@ -227,18 +219,15 @@
       document.getElementById("title").textContent = (row.title || "").toUpperCase();
       document.getElementById("blurb").textContent = row.blurb || "";
 
-      // Background
+      // Background image with preloading
       const bgUrl = row.bg_image?.trim() || DEFAULT_BG;
       const bgEl = document.getElementById("bg");
-
-      // Preload image to ensure it exists before showing
       const img = new Image();
       img.onload = function() {
         bgEl.style.backgroundImage = `url('${encodeURI(bgUrl)}')`;
-        document.getElementById("fallback").style.display = "none"; // hide fallback if image loads
+        document.getElementById("fallback").style.display = "none";
       };
       img.onerror = function() {
-        console.warn("Hero image failed to load, using default.");
         bgEl.style.backgroundImage = `url('${DEFAULT_BG}')`;
         document.getElementById("fallback").style.display = "none";
       };
@@ -272,3 +261,4 @@
 </script>
 </body>
 </html>
+

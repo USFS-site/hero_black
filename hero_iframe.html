@@ -229,11 +229,10 @@
       document.getElementById("blurb").textContent = row.blurb || "";
 
       // Background
-      const bg = row.bg_image?.trim()
-        ? row.bg_image.trim()
-        : DEFAULT_BG;
-      document.getElementById("bg").style.backgroundImage = `url('${bg}')`;
-
+      const bg = row.bg_image?.trim() ? row.bg_image.trim() : DEFAULT_BG;
+      console.log("Background URL:", bg); // debug
+      document.getElementById("bg").style.backgroundImage = `url('${encodeURI(bg)}')`;
+      
       // Buttons
       const btnWrap = document.getElementById("buttons");
       btnWrap.innerHTML = "";

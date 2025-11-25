@@ -41,18 +41,19 @@
       width: 100%;
       height: var(--hero-height);
       display: flex;
-      align-items: flex-start; /* top-align content */
+      align-items: flex-start;
       box-sizing: border-box;
       color: var(--white);
+      overflow: hidden;
     }
 
-    /* Background image with cover and right alignment */
+    /* Right-aligned background */
     .hero__bg {
       position: absolute;
       inset: 0;
-      background-size: cover;           /* fill hero fully */
-      background-position: right center; /* align image to right */
       background-repeat: no-repeat;
+      background-size: auto 100%;         /* height fills hero */
+      background-position: right center;  /* align right */
       z-index: 0;
     }
 
@@ -71,7 +72,7 @@
       padding: 48px 32px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;  /* align content to top */
+      justify-content: flex-start;
       height: 100%;
     }
 
@@ -98,7 +99,7 @@
     .hero__blurb {
       font: 1rem / 1.5 "Plus Jakarta Sans", arial, sans-serif;
       color: rgba(255,255,255,0.95);
-      margin-bottom: 32px; /* extra space before buttons */
+      margin-bottom: 36px; /* extra space before buttons */
       max-width: 60ch;
       white-space: normal;
     }
@@ -219,9 +220,9 @@
       document.getElementById("title").textContent = (row.title || "").toUpperCase();
       document.getElementById("blurb").textContent = row.blurb || "";
 
-      // Background image
-      const bgUrl = row.bg_image?.trim() || DEFAULT_BG;
-      document.getElementById("bg").style.backgroundImage = `url('${encodeURI(bgUrl)}')`;
+      // Background image (right-aligned, height 100%)
+      const bg = row.bg_image?.trim() || DEFAULT_BG;
+      document.getElementById("bg").style.backgroundImage = `url('${bg}')`;
 
       // Buttons
       const btnWrap = document.getElementById("buttons");

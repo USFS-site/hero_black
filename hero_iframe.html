@@ -41,18 +41,20 @@
       width: 100%;
       height: var(--hero-height);
       display: flex;
-      align-items: flex-start; /* align content to top */
+      align-items: flex-start; /* top-align content */
       box-sizing: border-box;
       color: var(--white);
     }
 
+    /* Background image aligned right, fills height, keeps aspect ratio */
     .hero__bg {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      background-size: cover;        /* fill container while keeping aspect ratio */
-      background-position: right center; /* shift image to the right to avoid cropping faces */
+      background-size: auto 100%;        /* height fills hero, width scales */
+      background-position: right center; /* align image to right */
+      background-repeat: no-repeat;
       z-index: 0;
     }
 
@@ -98,7 +100,7 @@
     .hero__blurb {
       font: 1rem / 1.5 "Plus Jakarta Sans", arial, sans-serif;
       color: rgba(255,255,255,0.95);
-      margin-bottom: 24px;
+      margin-bottom: 32px; /* extra space before buttons */
       max-width: 60ch;
       white-space: normal;
     }
@@ -261,4 +263,3 @@
 </script>
 </body>
 </html>
-

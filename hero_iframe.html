@@ -176,15 +176,13 @@
     </div>
   </div>
   <div id="fallback" class="hero__fallback">Content not available</div>
-
 <script>
 (function() {
   const DEFAULT_CSV =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo6JAV5prsmpxnt6fl9BHXvaL25XD-hzRAyUe50rx4_ImrfjUjhjqKW72XW1QX2gRJwH6A3YXtTgmg/pub?output=csv";
 
-  // ⭐ IMPORTANT: Replace with ANY real hosted image
   const DEFAULT_BG =
-    "https://usfigureskatingfanzone.com/images/2025/8/22/compete_0.jpg";
+    "https://usfs-site.github.io/hero_black/default.jpg";
 
   function getParam(name) {
     const params = new URLSearchParams(window.location.search);
@@ -198,18 +196,18 @@
   console.log("CSV URL:", csvUrl);
 
   fetch(csvUrl, { cache: "no-cache" })
-    .then((r) => r.text())
-    .then((csv) => {
+    .then(r => r.text())
+    .then(csv => {
       const parsed = Papa.parse(csv, {
         header: true,
         skipEmptyLines: true,
-        transformHeader: (h) => h.trim(),
+        transformHeader: h => h.trim()
       });
 
       console.log("Parsed data:", parsed.data);
 
-      let row = parsed.data.find((r) => r.id === targetId);
-      if (!row) row = parsed.data[0]; // default to first row
+      let row = parsed.data.find(r => r.id === targetId);
+      if (!row) row = parsed.data[0];
 
       console.log("Selected row:", row);
 
@@ -218,23 +216,33 @@
         return;
       }
 
-      // ⭐ NO MORE FALLBACK TO ID — fixes the “1”
-      const eyebrowField = row.eyebrow?.trim();
+      // Set eyebrow
       const eyebrowEl = document.getElementById("eyebrow");
-      if (eyebrowField) {
+      if (row.eyebrow?.trim()) {
         eyebrowEl.style.display = "block";
-        eyebrowEl.textContent = eyebrowField;
+        eyebrowEl.textContent = row.eyebrow.trim();
       }
 
-      document.getElementById("title").textContent =
-        (row.title || "").toUpperCase();
+      document.getElementById("title").textContent = (row.title || "").toUpperCase();
       document.getElementById("blurb").textContent = row.blurb || "";
 
       // Background
-      const bg = row.bg_image?.trim() ? row.bg_image.trim() : DEFAULT_BG;
-      console.log("Background URL:", bg); // debug
-      document.getElementById("bg").style.backgroundImage = `url('${encodeURI(bg)}')`;
-      
+      const bgUrl = row.bg_image?.trim() || DEFAULT_BG;
+      const bgEl = document.getElementById("bg");
+
+      // Preload image to ensure it exists before showing
+      const img = new Image();
+      img.onload = function() {
+        bgEl.style.backgroundImage = `url('${encodeURI(bgUrl)}')`;
+        document.getElementById("fallback").style.display = "none"; // hide fallback if image loads
+      };
+      img.onerror = function() {
+        console.warn("Hero image failed to load, using default.");
+        bgEl.style.backgroundImage = `url('${DEFAULT_BG}')`;
+        document.getElementById("fallback").style.display = "none";
+      };
+      img.src = bgUrl;
+
       // Buttons
       const btnWrap = document.getElementById("buttons");
       btnWrap.innerHTML = "";
@@ -255,12 +263,11 @@
         btnWrap.appendChild(b2);
       }
     })
-    .catch((err) => {
+    .catch(err => {
       console.error("Error loading CSV:", err);
       document.getElementById("fallback").style.display = "flex";
     });
 })();
 </script>
-
 </body>
 </html>

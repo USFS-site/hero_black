@@ -143,37 +143,45 @@ function parseCSV(str) {
 }
 
 async function loadData() {
-    const params = new URLSearchParams(window.location.search);
-    const targetID = params.get("id");
+  const params = new URLSearchParams(window.location.search);
+  const targetID = params.get("id");
+  console.log("Target ID:", targetID);
 
+  try {
     const response = await fetch(sheetURL);
+    console.log("Fetched CSV, status:", response.status);
     const csv = await response.text();
+    console.log("CSV text:", csv.substring(0, 200)); // just log first 200 chars
     const rows = parseCSV(csv);
+    console.log("Parsed rows:", rows);
 
     const headers = rows[0].map(h => h.trim());
     const data = rows.slice(1);
 
     const row = data.find(r => r[0] === targetID);
+    console.log("Matched row:", row);
 
     if (!row) {
-        document.getElementById("title").textContent = "Hero Not Found";
-        return;
+      document.getElementById("title").textContent = "Hero Not Found";
+      return;
     }
 
     const rowData = {};
     headers.forEach((h, i) => rowData[h] = row[i] || "");
 
-    // Apply values
     document.getElementById("title").textContent = rowData.title;
     document.getElementById("blurb").textContent = rowData.blurb;
     document.getElementById("hero").style.backgroundImage = `url("${rowData.bg_image}")`;
-
     document.getElementById("btn1").textContent = rowData.button1_text;
     document.getElementById("btn1").href = rowData.button1_url;
-
     document.getElementById("btn2").textContent = rowData.button2_text;
     document.getElementById("btn2").href = rowData.button2_url;
+  } catch (err) {
+    console.error("Error loading or parsing CSV:", err);
+    document.getElementById("title").textContent = "Error loading content";
+  }
 }
+
 
 loadData();
 </script>

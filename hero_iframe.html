@@ -47,14 +47,21 @@
       overflow: hidden;
     }
 
-    /* Right-aligned background */
+    /* Background image container */
     .hero__bg {
       position: absolute;
       inset: 0;
-      background-repeat: no-repeat;
-      background-size: auto 100%;         /* height fills hero */
-      background-position: right center;  /* align right */
+      overflow: hidden;
       z-index: 0;
+    }
+
+    /* Background image as <img> */
+    .hero__bg img {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: auto;
     }
 
     .hero__overlay {
@@ -220,9 +227,10 @@
       document.getElementById("title").textContent = (row.title || "").toUpperCase();
       document.getElementById("blurb").textContent = row.blurb || "";
 
-      // Background image (right-aligned, height 100%)
+      // Background image as <img>
+      const bgContainer = document.getElementById("bg");
       const bg = row.bg_image?.trim() || DEFAULT_BG;
-      document.getElementById("bg").style.backgroundImage = `url('${bg}')`;
+      bgContainer.innerHTML = `<img src="${bg}" alt="Hero background">`;
 
       // Buttons
       const btnWrap = document.getElementById("buttons");

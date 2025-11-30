@@ -142,8 +142,14 @@
       .hero__title { font-size: 38px; }
     }
 
+   /* @media (max-width: 640px) {
+      :root { --hero-height: 520px; } */
     @media (max-width: 640px) {
-      :root { --hero-height: 520px; }
+      :root { --hero-height: auto; }   /* let hero expand */
+      .hero {
+        height: auto;
+        min-height: 520px;             /* keeps your desktop sizing intention */
+      }
       .hero { align-items: flex-end; }
       .hero__title { font-size: 32px; }
       .hero__blurb { font-size: 15px; }
